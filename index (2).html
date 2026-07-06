@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Balance de Capacidad y Atención — Campamento Transitorio Conopoima</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#1B3A5F;
+    --navy-dark:#152F4E;
+    --teal:#2E9E8F;
+    --teal-dark:#0E6F60;
+    --card-bg:#F8FAFB;
+    --card-border:#E3E9EE;
+    --pill:#EEF2F5;
+    --text-muted:#5E7186;
+    --green-head:#D9EAD3;
+    --green-border:#B6D7A8;
+    --danger:#B3402A;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Montserrat',system-ui,-apple-system,sans-serif;
+    background:#EDF1F4;color:var(--navy);
+    padding:16px;
+  }
+  .app{max-width:900px;margin:0 auto}
+
+  /* ── Pestañas ─────────────────────────────── */
+  .tabs{display:flex;gap:8px;margin-bottom:16px}
+  .tab-btn{
+    flex:1;padding:12px;border:none;border-radius:10px;cursor:pointer;
+    font-family:inherit;font-weight:700;font-size:14px;letter-spacing:.5px;
+    background:#fff;color:var(--text-muted);border:1px solid var(--card-border);
+  }
+  .tab-btn.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .panel{display:none}
+  .panel.active{display:block}
+
+  .sync-bar{
+    display:flex;justify-content:space-between;align-items:center;gap:10px;
+    font-size:12px;color:var(--text-muted);margin-bottom:12px;flex-wrap:wrap;
+  }
+  .sync-bar .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#9AA9B7;margin-right:6px}
+  .sync-bar.online .dot{background:var(--teal)}
+  .btn{
+    font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;
+    padding:10px 18px;border-radius:8px;border:1px solid var(--card-border);
+    background:#fff;color:var(--navy);
+  }
+  .btn.primary{background:var(--teal-dark);color:#fff;border-color:var(--teal-dark)}
+  .btn.primary:disabled{opacity:.55;cursor:wait}
+
+  /* ── FORMULARIO (estilo hoja de cálculo) ──── */
+  .sheet{background:#fff;border:1px solid var(--card-border);border-radius:14px;padding:20px}
+  .sheet h2{font-size:15px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+  .sheet .sub{font-size:12px;color:var(--teal);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:18px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:680px){.grid{grid-template-columns:1fr}}
+  fieldset{
+    border:1px solid var(--green-border);border-radius:8px;overflow:hidden;
+    background:#fff;
+  }
+  legend{display:none}
+  .fs-title{
+    background:var(--green-head);padding:8px 12px;font-size:12.5px;font-weight:700;
+    border-bottom:1px solid var(--green-border);
+  }
+  .row{
+    display:flex;justify-content:space-between;align-items:center;gap:10px;
+    padding:6px 12px;border-bottom:1px solid #EFF3F0;font-size:12.5px;
+  }
+  .row:last-child{border-bottom:none}
+  .row label{flex:1;font-weight:500}
+  .row input[type=number],.row input[type=date],.row input[type=text]{
+    width:110px;padding:6px 8px;border:1px solid #C9D4DD;border-radius:6px;
+    font-family:inherit;font-size:13px;text-align:right;color:var(--navy);font-weight:600;
+  }
+  .row input[type=date]{width:150px;text-align:left}
+  .row input:focus{outline:2px solid var(--teal);outline-offset:0;border-color:var(--teal)}
+  .row.subtotal{background:#F4F8F3;font-weight:700}
+  .row.subtotal span{font-size:13.5px}
+  .row .rm{
+    border:none;background:none;color:var(--danger);cursor:pointer;
+    font-weight:800;font-size:15px;line-height:1;padding:2px 6px;
+  }
+  .add-row{
+    width:100%;border:1px dashed var(--green-border);background:#FBFDFA;color:var(--teal-dark);
+    font-family:inherit;font-weight:700;font-size:12px;padding:7px;cursor:pointer;
+  }
+  .form-foot{margin-top:20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .form-foot .msg{font-size:12.5px;font-weight:600}
+  .msg.ok{color:var(--teal-dark)} .msg.err{color:var(--danger)}
+  .who{display:flex;align-items:center;gap:8px;font-size:12.5px;margin:14px 0 0}
+  .who input{flex:1;max-width:320px;padding:8px 10px;border:1px solid #C9D4DD;border-radius:6px;font-family:inherit;font-size:13px}
+
+  /* ── DASHBOARD (formato institucional) ────── */
+  .dash{background:#fff;border:1px solid var(--card-border);border-radius:16px;padding:28px 26px}
+  .dash h1{
+    text-align:center;font-size:clamp(17px,3.4vw,24px);font-weight:800;
+    letter-spacing:.5px;color:var(--navy-dark);
+  }
+  .dash .camp{
+    text-align:center;color:var(--teal);font-weight:700;letter-spacing:1.5px;
+    font-size:clamp(12px,2.2vw,15px);text-transform:uppercase;margin-top:4px;
+  }
+  .date-pill{
+    display:block;width:fit-content;margin:14px auto 22px;background:var(--pill);
+    padding:8px 22px;border-radius:999px;font-weight:700;font-size:13px;letter-spacing:.5px;
+  }
+  .cards2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media(max-width:640px){.cards2,.cards3{grid-template-columns:1fr}}
+  .card{
+    background:var(--card-bg);border:1px solid var(--card-border);border-radius:14px;
+    padding:22px 14px;text-align:center;
+  }
+  .card .icon{height:34px;margin-bottom:10px;display:flex;justify-content:center;align-items:center}
+  .card .icon svg{height:32px;width:auto;fill:var(--navy);stroke:var(--navy)}
+  .card .label{font-size:13px;font-weight:800;letter-spacing:.5px;text-transform:uppercase}
+  .card .hint{font-size:10px;color:var(--text-muted);font-weight:600}
+  .card .num{font-size:clamp(34px,6vw,48px);font-weight:800;color:var(--navy-dark);line-height:1.15;margin:6px 0 2px}
+  .card .cap{font-size:11px;color:var(--teal);font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+  .section-title{
+    display:flex;align-items:center;gap:14px;margin:26px 0 14px;
+    font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;
+    color:var(--navy);justify-content:center;
+  }
+  .section-title::before,.section-title::after{content:"";flex:1;height:1px;background:var(--card-border)}
+  .note{
+    margin-top:24px;background:var(--teal-dark);color:#fff;border-radius:10px;
+    padding:14px 18px;font-size:13px;font-weight:500;
+  }
+  .note b{color:#8FE0D3;letter-spacing:.5px;text-transform:uppercase;font-weight:800}
+  .empty-state{text-align:center;padding:60px 20px;color:var(--text-muted);font-size:14px;font-weight:600}
+
+  @media print{
+    body{background:#fff;padding:0}
+    .tabs,.sync-bar,#panel-form{display:none!important}
+    .dash{border:none}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="tabs">
+    <button class="tab-btn" id="tabForm" onclick="showTab('form')">📋 Registro de Datos</button>
+    <button class="tab-btn active" id="tabDash" onclick="showTab('dash')">📊 Balance General</button>
+  </div>
+
+  <div class="sync-bar" id="syncBar">
+    <span><span class="dot"></span><span id="syncText">Sin conexión configurada — modo local</span></span>
+    <span style="display:flex;gap:8px">
+      <button class="btn" onclick="loadLatest(true)">⟳ Actualizar</button>
+      <button class="btn" onclick="window.print()">🖨 Imprimir balance</button>
+    </span>
+  </div>
+
+  <!-- ═══════════ FORMULARIO ═══════════ -->
+  <div class="panel" id="panel-form">
+    <div class="sheet">
+      <h2>Registro de Datos del Censo</h2>
+      <div class="sub">Campamento Transitorio Conopoima</div>
+
+      <div class="grid">
+        <div style="display:flex;flex-direction:column;gap:16px">
+
+          <fieldset>
+            <div class="fs-title">Adultos Mayores (60 años o más)</div>
+            <div class="row"><label>Femeninos:</label><input type="number" min="0" id="amF" value="0"></div>
+            <div class="row"><label>Masculinos:</label><input type="number" min="0" id="amM" value="0"></div>
+            <div class="row subtotal"><label>Subtotal</label><span id="st_am">0</span></div>
+          </fieldset>
+
+          <fieldset>
+            <div class="fs-title">Adultos (18 a 60 años)</div>
+            <div class="row"><label>Femeninos:</label><input type="number" min="0" id="adF" value="0"></div>
+            <div class="row"><label>Masculinos:</label><input type="number" min="0" id="adM" value="0"></div>
+            <div class="row subtotal"><label>Subtotal</label><span id="st_ad">0</span></div>
+          </fieldset>
+
+          <fieldset>
+            <div class="fs-title">Niños, Niñas y Adolescentes</div>
+            <div class="row"><label>Lactantes Niñas (0 a 2 años):</label><input type="number" min="0" id="lacNinas" value="0"></div>
+            <div class="row"><label>Lactantes Niños (0 a 2 años):</label><input type="number" min="0" id="lacNinos" value="0"></div>
+            <div class="row"><label>No Lactantes Niñas (0 a 12 años):</label><input type="number" min="0" id="noLacNinas" value="0"></div>
+            <div class="row"><label>No Lactantes Niños (0 a 12 años):</label><input type="number" min="0" id="noLacNinos" value="0"></div>
+            <div class="row"><label>Adolescentes Femenino (13 a 17 años):</label><input type="number" min="0" id="adolF" value="0"></div>
+            <div class="row"><label>Adolescentes Masculino (13 a 17 años):</label><input type="number" min="0" id="adolM" value="0"></div>
+            <div class="row subtotal"><label>Subtotal</label><span id="st_nna">0</span></div>
+          </fieldset>
+
+          <fieldset>
+            <div class="fs-title">Núcleos Familiares</div>
+            <div class="row"><label>Total de familias:</label><input type="number" min="0" id="nucleos" value="0"></div>
+          </fieldset>
+
+          <fieldset>
+            <div class="fs-title">Capacidad Instalada</div>
+            <div class="row"><label>Total de plazas:</label><input type="number" min="0" id="capacidadInstalada" value="400"></div>
+          </fieldset>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px">
+
+          <fieldset>
+            <div class="fs-title">Atención Especial</div>
+            <div class="row"><label>Mujeres embarazadas:</label><input type="number" min="0" id="embarazadas" value="0"></div>
+            <div class="row"><label>Mujeres en periodo de lactancia:</label><input type="number" min="0" id="lactancia" value="0"></div>
+          </fieldset>
+
+          <fieldset>
+            <div class="fs-title">Personas con Discapacidad</div>
+            <div class="row"><label>Femeninos:</label><input type="number" min="0" id="disF" value="0"></div>
+            <div class="row"><label>Masculinos:</label><input type="number" min="0" id="disM" value="0"></div>
+            <div class="row subtotal"><label>Subtotal</label><span id="st_dis">0</span></div>
+          </fieldset>
+
+          <fieldset>
+            <div class="fs-title">Personas con Enfermedades Crónicas</div>
+            <div class="row"><label>Femeninos:</label><input type="number" min="0" id="croF" value="0"></div>
+            <div class="row"><label>Masculinos:</label><input type="number" min="0" id="croM" value="0"></div>
+            <div class="row subtotal"><label>Subtotal</label><span id="st_cro">0</span></div>
+          </fieldset>
+
+          <fieldset>
+            <div class="fs-title">Mascotas</div>
+            <div class="row"><label>Perro:</label><input type="number" min="0" id="perro" value="0"></div>
+            <div class="row"><label>Loro:</label><input type="number" min="0" id="loro" value="0"></div>
+            <div class="row"><label>Otras:</label><input type="number" min="0" id="otrasMascotas" value="0"></div>
+            <div class="row subtotal"><label>Subtotal</label><span id="st_masc">0</span></div>
+          </fieldset>
+
+          <fieldset>
+            <div class="fs-title">Ingresos por Fecha</div>
+            <div id="ingresosList"></div>
+            <div class="row subtotal"><label>Subtotal ingresos</label><span id="st_ing">0</span></div>
+            <button type="button" class="add-row" onclick="addIngreso()">＋ Agregar fecha de ingreso</button>
+          </fieldset>
+
+          <fieldset>
+            <div class="fs-title">Pendientes</div>
+            <div class="row"><label>Registrados por carnetizar:</label><input type="number" min="0" id="porCarnetizar" value="0"></div>
+          </fieldset>
+
+          <fieldset>
+            <div class="fs-title">Totales (cálculo automático)</div>
+            <div class="row subtotal"><label>Femeninos</label><span id="st_totF">0</span></div>
+            <div class="row subtotal"><label>Masculinos</label><span id="st_totM">0</span></div>
+            <div class="row subtotal"><label>Censados</label><span id="st_cens">0</span></div>
+            <div class="row subtotal"><label>Total de personas (ocupada)</label><span id="st_ocup">0</span></div>
+          </fieldset>
+        </div>
+      </div>
+
+      <div class="who">
+        <label style="font-weight:700">Registrado por:</label>
+        <input type="text" id="registradoPor" placeholder="Nombre / máquina (ej. Andru — PC-01)">
+      </div>
+
+      <div class="form-foot">
+        <button class="btn primary" id="btnSave" onclick="saveData()">💾 Guardar y publicar balance</button>
+        <span class="msg" id="saveMsg"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ DASHBOARD ═══════════ -->
+  <div class="panel active" id="panel-dash">
+    <div class="dash" id="dashContent">
+      <div class="empty-state">Aún no hay registros guardados.<br>Complete el formulario en la pestaña «Registro de Datos».</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   CONFIGURACIÓN — pegue aquí la URL /exec del Apps Script
+   Si se deja vacía, la app funciona en modo local (localStorage)
+   solo en esta máquina, útil para probar el diseño.
+═══════════════════════════════════════════════════════════════ */
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby1HO7MiPWsd-sezYb4rWA5327jRKX2fNxB2WZ3wpZ4nWft88tPPoFb5o2cGB_c_2geWw/exec";
+const REFRESH_SECONDS = 60;      // auto-actualización del balance
+
+const NUM_IDS = ['amF','amM','adF','adM','lacNinas','lacNinos','noLacNinas','noLacNinos',
+  'adolF','adolM','nucleos','capacidadInstalada','embarazadas','lactancia',
+  'disF','disM','croF','croM','perro','loro','otrasMascotas','porCarnetizar'];
+
+const $ = id => document.getElementById(id);
+const n = id => Number($(id).value) || 0;
+
+/* ── Pestañas ── */
+function showTab(which){
+  $('panel-form').classList.toggle('active', which==='form');
+  $('panel-dash').classList.toggle('active', which==='dash');
+  $('tabForm').classList.toggle('active', which==='form');
+  $('tabDash').classList.toggle('active', which==='dash');
+}
+
+/* ── Ingresos dinámicos ── */
+function addIngreso(fecha='', cantidad=''){
+  const div = document.createElement('div');
+  div.className = 'row ingreso';
+  div.innerHTML = `
+    <input type="date" value="${fecha}">
+    <input type="number" min="0" placeholder="Personas" value="${cantidad}">
+    <button type="button" class="rm" title="Eliminar" onclick="this.parentElement.remove();recalc()">×</button>`;
+  div.querySelectorAll('input').forEach(i => i.addEventListener('input', recalc));
+  $('ingresosList').appendChild(div);
+}
+function getIngresos(){
+  return [...document.querySelectorAll('#ingresosList .ingreso')].map(r => {
+    const [f, c] = r.querySelectorAll('input');
+    return { fecha: f.value, cantidad: Number(c.value) || 0 };
+  }).filter(i => i.fecha || i.cantidad);
+}
+
+/* ── Subtotales en vivo ── */
+function recalc(){
+  const am = n('amF') + n('amM');
+  const ad = n('adF') + n('adM');
+  const nna = n('lacNinas') + n('lacNinos') + n('noLacNinas') + n('noLacNinos') + n('adolF') + n('adolM');
+  const totF = n('amF') + n('adF') + n('lacNinas') + n('noLacNinas') + n('adolF');
+  const totM = n('amM') + n('adM') + n('lacNinos') + n('noLacNinos') + n('adolM');
+  const cens = am + ad + nna;
+  $('st_am').textContent = am;
+  $('st_ad').textContent = ad;
+  $('st_nna').textContent = nna;
+  $('st_dis').textContent = n('disF') + n('disM');
+  $('st_cro').textContent = n('croF') + n('croM');
+  $('st_masc').textContent = n('perro') + n('loro') + n('otrasMascotas');
+  $('st_ing').textContent = getIngresos().reduce((s,i)=>s+i.cantidad,0);
+  $('st_totF').textContent = totF;
+  $('st_totM').textContent = totM;
+  $('st_cens').textContent = cens;
+  $('st_ocup').textContent = cens + n('porCarnetizar');
+}
+NUM_IDS.forEach(id => $(id).addEventListener('input', recalc));
+
+/* ── Guardar ── */
+function collect(){
+  const data = { registradoPor: $('registradoPor').value.trim(), ingresos: getIngresos() };
+  NUM_IDS.forEach(id => data[id] = n(id));
+  return data;
+}
+async function saveData(){
+  const btn = $('btnSave'), msg = $('saveMsg');
+  btn.disabled = true; msg.textContent = 'Guardando…'; msg.className = 'msg';
+  const data = collect();
+  try{
+    if (SCRIPT_URL){
+      const res = await fetch(SCRIPT_URL, { method:'POST', body: JSON.stringify(data) });
+      const out = await res.json();
+      if (!out.ok) throw new Error(out.error || 'Error del servidor');
+    } else {
+      data.timestamp = new Date().toISOString();
+      localStorage.setItem('balanceConopoima', JSON.stringify(data));
+    }
+    msg.textContent = '✓ Guardado. Balance actualizado.';
+    msg.className = 'msg ok';
+    await loadLatest(false);
+    showTab('dash');
+  }catch(err){
+    msg.textContent = '✗ No se pudo guardar: ' + err.message;
+    msg.className = 'msg err';
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+/* ── Cargar último registro y pintar dashboard ── */
+async function loadLatest(showFeedback){
+  const bar = $('syncBar'), txt = $('syncText');
+  try{
+    let data = null;
+    if (SCRIPT_URL){
+      const res = await fetch(SCRIPT_URL + '?t=' + Date.now());
+      const out = await res.json();
+      if (out.ok && !out.empty) data = out;
+      bar.classList.add('online');
+      txt.textContent = 'Conectado a Google Sheets · última consulta ' + new Date().toLocaleTimeString('es-VE');
+    } else {
+      const raw = localStorage.getItem('balanceConopoima');
+      if (raw) data = JSON.parse(raw);
+      txt.textContent = 'Modo local (configure SCRIPT_URL para sincronizar entre máquinas)';
+    }
+    if (data){ renderDash(data); fillForm(data); }
+  }catch(err){
+    txt.textContent = 'Error de conexión: ' + err.message;
+    bar.classList.remove('online');
+    if (showFeedback) alert('No se pudo actualizar: ' + err.message);
+  }
+}
+
+function fillForm(d){
+  NUM_IDS.forEach(id => { if (d[id] !== undefined && d[id] !== '') $(id).value = d[id]; });
+  if (d.registradoPor) $('registradoPor').value = d.registradoPor;
+  $('ingresosList').innerHTML = '';
+  (d.ingresos || []).forEach(i => addIngreso(formatDateInput(i.fecha), i.cantidad));
+  recalc();
+}
+function formatDateInput(f){
+  if (!f) return '';
+  const d = new Date(f);
+  return isNaN(d) ? String(f).slice(0,10) : d.toISOString().slice(0,10);
+}
+
+/* ── Render del balance (formato institucional) ── */
+const MESES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+function fmtFecha(ts){
+  const d = ts ? new Date(ts) : new Date();
+  if (isNaN(d)) return String(ts);
+  let h = d.getHours(), ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  const min = String(d.getMinutes()).padStart(2,'0');
+  return `${d.getDate()} DE ${MESES[d.getMonth()]} DE ${d.getFullYear()} — ${h}:${min} ${ampm}`;
+}
+
+const ICONS = {
+  cama:'<svg viewBox="0 0 24 24"><path d="M3 6v12h2v-3h14v3h2v-8a3 3 0 0 0-3-3h-7v5H5V6H3zm4 3.5A1.5 1.5 0 1 1 7 9.49 1.5 1.5 0 0 1 7 9.5z"/></svg>',
+  carpa:'<svg viewBox="0 0 24 24"><path d="M12 8 3 20h6l3-5 3 5h6L12 8zm-1-6h2v3.6l1.8-1.3 1.1 1.6L12 8.7 8.1 5.9l1.1-1.6L11 5.6V2z"/></svg>',
+  nino:'<svg viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="2.2"/><path d="M12 8c-2 0-3.5 1-3.5 3v4h1.8V22h3.4v-7h1.8v-4c0-2-1.5-3-3.5-3z"/></svg>',
+  adultos:'<svg viewBox="0 0 24 24"><circle cx="9" cy="6" r="2.6"/><circle cx="16.5" cy="7.5" r="2.1"/><path d="M9 10c-2.8 0-4.5 1.5-4.5 4v3h2V22h5v-5h2v-3c0-2.5-1.7-4-4.5-4zm7.5 1.5c-.7 0-1.4.15-1.9.45.9.9 1.4 2.1 1.4 3.55v3h4v-3.5c0-2.2-1.4-3.5-3.5-3.5z"/></svg>',
+  mayor:'<svg viewBox="0 0 24 24"><circle cx="11" cy="4.5" r="2.2"/><path d="M11 8c-2 0-3.4 1.2-3.4 3.2V15h1.8v7h3.2v-7h1.8v-3.8C14.4 9.2 13 8 11 8zm5.5 3.5h1.5V22h-1.5z"/></svg>',
+  casa:'<svg viewBox="0 0 24 24"><path d="M12 3 3 10h2v10h6v-6h2v6h6V10h2L12 3z"/></svg>',
+  pata:'<svg viewBox="0 0 24 24"><circle cx="7" cy="8" r="1.8"/><circle cx="12" cy="6" r="1.8"/><circle cx="17" cy="8" r="1.8"/><circle cx="19.5" cy="12" r="1.6"/><circle cx="4.5" cy="12" r="1.6"/><path d="M12 11c-2.6 0-5 2.4-5 5 0 1.7 1.3 3 3 3 .8 0 1.4-.3 2-.7.6.4 1.2.7 2 .7 1.7 0 3-1.3 3-3 0-2.6-2.4-5-5-5z"/></svg>',
+  silla:'<svg viewBox="0 0 24 24"><circle cx="12" cy="4" r="2"/><path d="M12.5 7h-2v7h5v-1.8h-3V7zm-1 8.5A4.5 4.5 0 1 0 16 20h-1.9a2.7 2.7 0 1 1-2.6-3.6V15.5zm5.5.5 1.8 4H21l-2.2-5H16v1.5h1z"/></svg>'
+};
+
+function card(icon, label, hint, num, cap){
+  return `<div class="card">
+    <div class="icon">${ICONS[icon]}</div>
+    <div class="label">${label} ${hint?`<span class="hint">${hint}</span>`:''}</div>
+    <div class="num">${Number(num).toLocaleString('es-VE')}</div>
+    <div class="cap">${cap}</div>
+  </div>`;
+}
+
+function renderDash(d){
+  const num = k => Number(d[k]) || 0;
+  const am  = num('amF') + num('amM');
+  const ad  = num('adF') + num('adM');
+  const nna = num('lacNinas') + num('lacNinos') + num('noLacNinas') + num('noLacNinos') + num('adolF') + num('adolM');
+  const cens = am + ad + nna;
+  const pend = num('porCarnetizar');
+  const ocupada = cens + pend;
+  const masc = num('perro') + num('loro') + num('otrasMascotas');
+  const dis = num('disF') + num('disM');
+
+  $('dashContent').innerHTML = `
+    <h1>BALANCE GENERAL DE CAPACIDAD Y ATENCIÓN</h1>
+    <div class="camp">Campamento Transitorio Conopoima</div>
+    <span class="date-pill">${fmtFecha(d.timestamp)}</span>
+
+    <div class="cards2">
+      ${card('cama','Capacidad Instalada','',num('capacidadInstalada'),'Total de plazas')}
+      ${card('carpa','Capacidad Ocupada','',ocupada,'Personas instaladas')}
+    </div>
+
+    <div class="section-title">Desglose por Grupo de Edad</div>
+    <div class="cards3">
+      ${card('nino','Niños, Niñas y Adolescentes','(0 a 17 años)',nna,'Censados')}
+      ${card('adultos','Adultos','(18 a 60 años)',ad,'Censados')}
+      ${card('mayor','Adultos Mayores','(60 años o más)',am,'Censados')}
+    </div>
+
+    <div class="section-title">Indicadores de Control</div>
+    <div class="cards3">
+      ${card('casa','Núcleos Familiares','',num('nucleos'),'Familias')}
+      ${card('pata','Total Mascotas','',masc,'Animales')}
+      ${card('silla','Personas con Discapacidad','',dis,'Con atención esp.')}
+    </div>
+
+    ${pend > 0 ? `<div class="note"><b>Nota aclaratoria:</b> ${pend} persona${pend===1?'':'s'} se encuentra${pend===1?'':'n'} pendiente${pend===1?'':'s'} de carnetización y asignación.</div>` : ''}
+  `;
+}
+
+/* ── Inicio ── */
+addIngreso();
+recalc();
+loadLatest(false);
+if (SCRIPT_URL) setInterval(() => loadLatest(false), REFRESH_SECONDS * 1000);
+</script>
+</body>
+</html>
